@@ -18,13 +18,11 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationLabel = 'Utilizatori';
 
-    // Permite oricărui utilizator să acceseze secțiunea
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check(); // permite accesul tuturor utilizatorilor logați
+        return auth()->check();
     }
 
-    // Permite tuturor utilizatorilor să vizualizeze utilizatorii
     public static function canViewAny(): bool
     {
         return auth()->check(); // toți utilizatorii logați pot vedea lista
@@ -59,7 +57,22 @@ class UserResource extends Resource
                 ->label('User Type')
                 ->options(User::TYPES)
                 ->required()
+                ->reactive()
                 ->default(User::TYPE_USER),
+            Forms\Components\Select::make('role')
+                ->label('Function')
+                ->options(function (callable $get) {
+                    return match ($get('user_type')) {
+                        User::TYPE_ADMIN => User::ADMIN_ROLES,
+                        User::TYPE_USER => User::WORKER_ROLES,
+                        default => [],
+                    };
+                })
+                ->required()
+                ->reactive()
+                ->visible(fn (callable $get) => filled($get('user_type')))
+                ->searchable(),
+
             Forms\Components\FileUpload::make('profile_picture')
                 ->label('Profile Picture')
                 ->image()
@@ -89,11 +102,19 @@ class UserResource extends Resource
                     User::TYPE_USER => 'primary',
                     default => 'secondary',
                 }),
+            TextColumn::make('role')
+                ->label('Function')
+                ->badge()
+                ->color(fn ($record) => match ($record->user_type) {
+                    User::TYPE_ADMIN => 'danger', // roșu pentru admini
+                    User::TYPE_USER => 'success', // verde pentru workeri
+                    default => 'gray',
+                }),
             Tables\Columns\ImageColumn::make('profile_picture')
                 ->disk('public')
-                ->label('Image')
+                ->label('Profile Picture')
                 ->height(60)
-                ->square(),
+                ->circular(),
         ])
             ->actions([
                 Tables\Actions\ViewAction::make(), // Permite vizualizarea
