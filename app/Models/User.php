@@ -41,15 +41,6 @@ class User extends Authenticatable
         'manager' => 'Manager',
     ];
 
-    public function getAvailableRoles(): array
-    {
-        return match ($this->user_type) {
-            self::TYPE_ADMIN => self::ADMIN_ROLES,
-            self::TYPE_USER => self::WORKER_ROLES,
-            default => [],
-        };
-    }
-
 
     /**
      * Check if user is admin
@@ -58,6 +49,17 @@ class User extends Authenticatable
     {
         return $this->user_type === self::TYPE_ADMIN;
     }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoriteVideos()
+    {
+        return $this->belongsToMany(Video::class, 'favorites');
+    }
+
 
 
     /**

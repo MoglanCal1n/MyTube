@@ -34,4 +34,10 @@ class Video extends Model
         'image',
         'video',
     ];
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'favorites');
+    }
+
 }
